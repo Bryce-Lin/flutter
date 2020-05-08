@@ -2,16 +2,42 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+// import 'package:dio/dio.dart';
+// import 'package:detail/detail.dart';
+
+import 'detail/detail.dart';
+// import 'dart:async';
 void main() => runApp(homePage());
 
 
 class homePage extends StatelessWidget {
+
+  // void HttpGet  ()async {
+    
+  //   Response response;
+  //   Dio dio = Dio();
+  //   response = await dio.get("http://www.0880ys.com/api.php/provide/vod/?ac=list");
+  //   printdata.toString());
+  //   // 请求参数也可以通过对象传递，上面的代码等同于：
+  //   // response = await dio.get("/test", queryParameters: {"id": 12, "name": "wendu"});
+  //   // print(response.data.toString());
+  // }
+
+  // HttpGet()
+  // @override
+  // void initState() { 
+  //   // super.initState();
+    
+  // }
+  
   @override
   Widget build(BuildContext context) {
+    
     //因为本路由没有使用Scaffold，为了让子级Widget(如Text)使用
     //Material Design 默认的样式风格,我们使用Material作为本路由的根。
     return MaterialApp(
-      title: '',
+      debugShowCheckedModeBanner: false,
+      title: '',  
       home: Scaffold(
         body:SafeArea(
           child: Container(
@@ -23,7 +49,7 @@ class homePage extends StatelessWidget {
                 navBar(),
                 bannerImage(),
                 movieContainer('最新'),
-                movieContainer('最新')
+                // movieContainer('最新')
               ],
             ),
           )
@@ -61,14 +87,40 @@ class movieContainer extends StatelessWidget {
   final title;
   const movieContainer(this.title,{Key key}) : super(key: key);
   
-  Widget getItemContainer (context) {
+  void _jumpHome (context,int index) {
+     Navigator.push(context, PageRouteBuilder(
+              pageBuilder: (BuildContext context, Animation animation,
+                  Animation secondaryAnimation) {
+                return new FadeTransition(
+                  opacity: animation,
+                  child: Scaffold(
+                    
+                    body: HeroPage(index),
+                  ),
+                );
+              })
+          );
+
+  }
+
+  Widget getItemContainer (context,index) {
     return Column(
             // mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(
+              
+                Expanded(
                 flex: 1,
-                child: ClipRRect(
+                child:
+                
+                InkWell(
+                onTap: () {
+                  _jumpHome(context,index);
+                },
+                child: 
+                Hero(
+        tag: 'DemoTag$index',
+            child: ClipRRect(
                 borderRadius: BorderRadius.circular(5.0),
                  child: FadeInImage.assetNetwork(
                   height: 154,
@@ -77,6 +129,9 @@ class movieContainer extends StatelessWidget {
                   placeholder: './images/a1.jpg',
                   image: 'https://img.sokoyo-rj.com/tuku/upload/vod/2020-03-29/202003291585461727.jpg'
               ),)
+          ),
+                
+                )
               ),
               Container(
                 margin: EdgeInsets.only(top:10,bottom:5),
@@ -96,7 +151,7 @@ class movieContainer extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext contexts) {
     return  Container(
      margin:EdgeInsets.only(top:20),
      child: Column(
@@ -130,7 +185,7 @@ class movieContainer extends StatelessWidget {
         ),
         itemBuilder: (BuildContext context, int index) {
             //Widget Function(BuildContext context, int index)
-            return getItemContainer(context);
+            return getItemContainer(contexts,index);
         })
         )
       ],
@@ -154,6 +209,7 @@ class _searchBarState extends State<searchBar> {
         maxHeight: 34,
       ),
       child:TextField(
+        autofocus: false,
         style: TextStyle(
               fontSize: 14,
               color:Color(0xff808080),
@@ -288,25 +344,7 @@ class imagePage extends StatelessWidget {
   }
 }
 
-class HeroPage extends StatelessWidget {
-  final int index;
-  
-  const HeroPage(this.index,{Key key}) : super(key: key);
-  
-  @override
-  Widget build(BuildContext context) {
-    print(index);
-    return Container(
-      child: Hero(
-        tag: "DemoTag$index",
-        child: Icon(
-          Icons.add,
-          size: 150.0,
-        ),
-      ),
-    );
-  }
-}
+
 
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 class VideoApp extends StatefulWidget {
