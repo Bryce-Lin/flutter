@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-05-09 10:19:07
+ * @LastEditTime: 2020-05-09 17:50:31
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \videos\lib\common\apiUtil.dart
+ */
 import 'package:dio/dio.dart';
 import 'dart:async';
 

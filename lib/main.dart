@@ -5,7 +5,7 @@ import 'package:chewie/chewie.dart';
 // import 'package:dio/dio.dart';
 // import 'package:detail/detail.dart';
 
-import 'detail/detail.dart';
+import 'routes/detail/detail.dart';
 // import 'dart:async';
 void main() => runApp(homePage());
 
