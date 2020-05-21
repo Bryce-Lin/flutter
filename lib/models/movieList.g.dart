@@ -7,9 +7,14 @@ part of 'movieList.dart';
 // **************************************************************************
 
 MovieList _$MovieListFromJson(Map<String, dynamic> json) {
-  return MovieList()..list = json['list'] as List;
+  return MovieList()
+    ..code = json['code'] as num
+    ..data = json['data'] as Map<String, dynamic>
+    ..message = json['message'] as String;
 }
 
 Map<String, dynamic> _$MovieListToJson(MovieList instance) => <String, dynamic>{
-      'list': instance.list,
+      'code': instance.code,
+      'data': instance.data,
+      'message': instance.message,
     };

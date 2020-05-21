@@ -1,44 +1,53 @@
 
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
-// import 'package:dio/dio.dart';
-// import 'package:detail/detail.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:videos/routes/movie/movie.dart';
+import 'package:videos/routes/player/play.dart';
+import 'package:videos/widgets/search.dart';
+
+import 'common/apiUtil.dart';
 import 'routes/detail/detail.dart';
-// import 'dart:async';
+
 void main() => runApp(homePage());
 
 
 class homePage extends StatelessWidget {
 
-  // void HttpGet  ()async {
-    
-  //   Response response;
-  //   Dio dio = Dio();
-  //   response = await dio.get("http://www.0880ys.com/api.php/provide/vod/?ac=list");
-  //   printdata.toString());
-  //   // 请求参数也可以通过对象传递，上面的代码等同于：
-  //   // response = await dio.get("/test", queryParameters: {"id": 12, "name": "wendu"});
-  //   // print(response.data.toString());
-  // }
 
-  // HttpGet()
-  // @override
-  // void initState() { 
-  //   // super.initState();
-    
-  // }
+  
+
   
   @override
   Widget build(BuildContext context) {
-    
+
+  //  print(data);
     //因为本路由没有使用Scaffold，为了让子级Widget(如Text)使用
     //Material Design 默认的样式风格,我们使用Material作为本路由的根。
     return MaterialApp(
+      initialRoute:"/a", //名为"/"的路由作为应用的home(首页)
+      routes: <String, WidgetBuilder>{
+          // MyHomePage
+              "/VideoApp": (context) {
+                return VideoApp(playurl:ModalRoute.of(context).settings.arguments);
+              },
+              "/videoDetail":(context) {
+                return MoviePage(type:ModalRoute.of(context).settings.arguments);
+              },
+              "/a":(context) => MyHomePage(), //注册首页路由
+      },
       debugShowCheckedModeBanner: false,
       title: '',  
-      home: Scaffold(
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
         body:SafeArea(
           child: Container(
           padding: EdgeInsets.fromLTRB(15, 10, 15, 20),
@@ -48,23 +57,76 @@ class homePage extends StatelessWidget {
                 searchBar(),
                 navBar(),
                 bannerImage(),
-                movieContainer('最新'),
+                MovieList()
+                // movieContainer('最新'),
                 // movieContainer('最新')
               ],
             ),
           )
         ),
         )
-      ),
+      );
+  }
+}
+
+class MovieList extends StatefulWidget {
+  MovieList({Key key}) : super(key: key);
+
+  @override
+  _MovieListState createState() => _MovieListState();
+}
+
+class _MovieListState extends State<MovieList> {
+
+  var movies ;
+  
+  void httpGet  ()async {
+    DioUtils.request('api/v2/movieHome',method:DioUtils.GET,onSuccess:(data){
+          
+          var resultData = jsonDecode(data);
+          movies = resultData['data'];
+          setState(() { });
+    });
+  }
+
+  List<Widget> getMoveChild () {
+    List<Widget> listWidget = [];
+    final redList = ['movie','series','variety','anime'];
+    final titleList = ['电影','电视剧','综艺','动漫'];
+    for(int i = 0;i<4;i++) {
+      if(movies is Map){
+        listWidget.add(movieContainer(titleList[i],i.toString(),movies[redList[i]]));
+      }else {
+        // listWidget.add(Text("dowload"));
+      }
+      
+    }
+    return listWidget;
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    httpGet();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return  Column(
+      children: getMoveChild(),
     );
   }
 }
 
-
-class bannerImage extends StatelessWidget {
-  const bannerImage({Key key}) : super(key: key);
+class bannerImage extends StatefulWidget {
+  bannerImage({Key key}) : super(key: key);
 
   @override
+  _bannerImageState createState() => _bannerImageState();
+}
+
+class _bannerImageState extends State<bannerImage> {
+    @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 15),
@@ -74,33 +136,44 @@ class bannerImage extends StatelessWidget {
         height: 180,
         width:MediaQuery.of(context).size.width,
         fit:BoxFit.fill,
-        image: 'http://tu.kanxi123.com:99/upload/vod/20200504-1/581c016dc2919e3eeb8bcd0bd498437c.jpg',
-        placeholder: './images/a1.jpg',
+        image: 'https://img.sokoyo-rj.com/tuku/upload/vod/2020-03-29/202003291585461727.jpg',
+        placeholder: './images/image.png',
       ),
     )  
     );
   }
 }
 
+// class bannerImage extends StatelessWidget {
+//   const bannerImage({Key key}) : super(key: key);
 
-class movieContainer extends StatelessWidget {
+
+// }
+
+class movieContainer extends StatefulWidget {
   final title;
-  const movieContainer(this.title,{Key key}) : super(key: key);
+  final movies;
+  final parentIndex;
+  movieContainer(this.title,this.parentIndex,this.movies,{Key key}) : super(key: key);
+
+  @override
+  _movieContainerState createState() => _movieContainerState();
+}
+
+class _movieContainerState extends State<movieContainer> {
+
+
   
-  void _jumpHome (context,int index) {
+  void _jumpHome (context,name,index) {
      Navigator.push(context, PageRouteBuilder(
               pageBuilder: (BuildContext context, Animation animation,
                   Animation secondaryAnimation) {
                 return new FadeTransition(
                   opacity: animation,
-                  child: Scaffold(
-                    
-                    body: HeroPage(index),
-                  ),
+                  child: HeroPage(name,widget.movies[int.parse(index)])
                 );
               })
           );
-
   }
 
   Widget getItemContainer (context,index) {
@@ -108,40 +181,38 @@ class movieContainer extends StatelessWidget {
             // mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              
                 Expanded(
                 flex: 1,
                 child:
-                
                 InkWell(
                 onTap: () {
-                  _jumpHome(context,index);
+                  print(context);
+                  _jumpHome(context,widget.parentIndex+'DemoTag'+index,index);
                 },
                 child: 
                 Hero(
-        tag: 'DemoTag$index',
+        tag: widget.parentIndex+'DemoTag'+index,
             child: ClipRRect(
                 borderRadius: BorderRadius.circular(5.0),
                  child: FadeInImage.assetNetwork(
                   height: 154,
                   width: MediaQuery.of(context).size.width,
                   fit: BoxFit.fill,
-                  placeholder: './images/a1.jpg',
-                  image: 'https://img.sokoyo-rj.com/tuku/upload/vod/2020-03-29/202003291585461727.jpg'
+                  placeholder: './images/image.png',
+                  image: widget.movies[int.parse(index)]['vod_pic']
               ),)
           ),
-                
                 )
               ),
               Container(
                 margin: EdgeInsets.only(top:10,bottom:5),
-                child: Text('黑豹',style: TextStyle(
+                child: Text(widget.movies[int.parse(index)]['vod_name'],overflow: TextOverflow.ellipsis,style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Color(0xff202020)
               ),),
               ),
-              Text('查德维克·博斯曼',style: TextStyle(
+              Text(widget.movies[int.parse(index)]['vod_director'],overflow: TextOverflow.ellipsis,style: TextStyle(
                 color: Color(0xff808080),
                 fontSize: 12,
                 fontWeight: FontWeight.w500
@@ -164,14 +235,14 @@ class movieContainer extends StatelessWidget {
               color: Color(0xffEA9A2F),
               margin: EdgeInsets.only(right:5),
             ),
-            Text(title)
+            Text(widget.title)
           ],
         ),
         Container(
       height: 500,
       margin: EdgeInsets.only(top:10),
       child: GridView.builder(
-        itemCount: 6,
+        itemCount: widget.movies.length,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             //横轴元素个数
@@ -185,52 +256,16 @@ class movieContainer extends StatelessWidget {
         ),
         itemBuilder: (BuildContext context, int index) {
             //Widget Function(BuildContext context, int index)
-            return getItemContainer(contexts,index);
+            return getItemContainer(context,index.toString());
         })
         )
       ],
     )
     );
   }
-} 
-
-class searchBar extends StatefulWidget {
-  searchBar({Key key}) : super(key: key);
-
-  @override
-  _searchBarState createState() => _searchBarState();
 }
 
-class _searchBarState extends State<searchBar> {
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints:BoxConstraints(
-        maxHeight: 34,
-      ),
-      child:TextField(
-        autofocus: false,
-        style: TextStyle(
-              fontSize: 14,
-              color:Color(0xff808080),
-              textBaseline: TextBaseline.alphabetic, //用于提示文字对齐
-            ),
-      decoration: InputDecoration(
-                hintText: "搜索",
-                filled:true,
-                isDense: true, //重要 用于编辑框对齐
-                prefixIcon: Icon(Icons.search),
-                contentPadding: EdgeInsets.zero,
-                fillColor:Color(0xFFF6F7F8),
-                border:OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none
-                )
-            ),
-    )
-    ); 
-  }
-}
+
 
 
 class navBar extends StatefulWidget {
@@ -242,10 +277,22 @@ class navBar extends StatefulWidget {
 
 class navBarState extends State<navBar> {
   
-  List<String> moveTitle = ['精选','电视剧','电影','动画','综艺','最近更新'];
+  List<String> moveTitle = ['电视剧','电影','动画','综艺','最近更新'];
   int selectIndex = 0;
+  String type ;
   void _handlerTitle (i) {
      selectIndex = i;
+          if(selectIndex == 0) {
+       type = '7';
+     }else if(selectIndex == 1) {
+       type = '13';
+     }else if(selectIndex == 2) {
+       type = '4';
+     }else if (selectIndex == 3) {
+      type = '3';
+     }
+     
+     Navigator.of(context).pushNamed("/videoDetail",arguments:type);
      setState(() {});
   }
 
@@ -286,125 +333,67 @@ class navBarState extends State<navBar> {
   }
 }
 
-class imagePage extends StatelessWidget {
+// class imagePage extends StatelessWidget {
  
-  List wigetList = [1,2,3,4,5];
+//   List wigetList = [1,2,3,4,5];
 
-  List<Widget> getWidget (BuildContext context) {
-    List<Widget> aList = [];
-    for(int i = 0;i<wigetList.length;i++) {
-      aList.add(
-        InkWell(
-          child:Hero(
-        tag: 'DemoTag$i',
-            child: Icon(
-              Icons.add,
-              size: 70.0,
-            ),
-          ),
-          onTap: () {
-          //打开B路由  
-          print(context);
-          Navigator.push(context, PageRouteBuilder(
-              pageBuilder: (BuildContext context, Animation animation,
-                  Animation secondaryAnimation) {
-                return new FadeTransition(
-                  opacity: animation,
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: Text("原图"),
-                    ),
-                    body: HeroPage(i),
-                  ),
-                );
-              })
-          );
-        }
-          )
-      );
+//   List<Widget> getWidget (BuildContext context) {
+//     List<Widget> aList = [];
+//     for(int i = 0;i<wigetList.length;i++) {
+//       aList.add(
+//         InkWell(
+//           child:Hero(
+//         tag: 'DemoTag$i',
+//             child: Icon(
+//               Icons.add,
+//               size: 70.0,
+//             ),
+//           ),
+//           onTap: () {
+//           //打开B路由  
+//           print(context);
+//           Navigator.push(context, PageRouteBuilder(
+//               pageBuilder: (BuildContext context, Animation animation,
+//                   Animation secondaryAnimation) {
+//                 return new FadeTransition(
+//                   opacity: animation,
+//                   child: Scaffold(
+//                     appBar: AppBar(
+//                       title: Text("原图"),
+//                     ),
+//                     body: HeroPage(i),
+//                   ),
+//                 );
+//               })
+//           );
+//         }
+//           )
+//       );
           
-    } 
-    return aList;
-  }
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false, //去掉页面右上角的debug标识
-      title: 'Video Demo',
-      home:
-      Builder(builder: (context)=>  Scaffold(
-        body: Row(
-            children: getWidget(context),
-          )
-        ),
-      )
-    );
+//     } 
+//     return aList;
+//   }
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false, //去掉页面右上角的debug标识
+//       title: 'Video Demo',
+//       home:
+//       Builder(builder: (context)=>  Scaffold(
+//         body: Row(
+//             children: getWidget(context),
+//           )
+//         ),
+//       )
+//     );
     
     
-  }
-}
+//   }
+// }
 
 
 
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
-class VideoApp extends StatefulWidget {
-  @override
-  _VideoAppState createState() => _VideoAppState();
-}
-
-class _VideoAppState extends State<VideoApp> {
-  VideoPlayerController _controller;
- ChewieController chewieController;
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.network(
-        'https://www.nmgxwhz.com:65/20200428/tOqzwhiS/index.m3u8');
-    chewieController = ChewieController(
-      videoPlayerController: _controller,
-      materialProgressColors: ChewieProgressColors(
-        playedColor: Colors.black,
-        handleColor: Colors.blue,
-        backgroundColor: Colors.grey,
-        bufferedColor: Colors.lightGreen,
-      ),
-      aspectRatio: 3 / 2, //宽高比
-      autoPlay: true, //自动播放
-      looping: false, //循环播放
-    );
-
-      // ..initialize().then((_) {
-      //   // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-      //   setState(() {});
-      // });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Video Demo',
-      home: Scaffold(
-        body: new Center(
-        child: Chewie(
-          controller: chewieController,
-        ),
-    ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-       /**
-     * 当页面销毁的时候，将视频播放器也销毁
-     * 否则，当页面销毁后会继续播放视频！
-     */
-    _controller.dispose();
-    chewieController.dispose();
-    // super.dispose();
-  }
-}
 
 
 // void main() {

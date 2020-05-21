@@ -6,7 +6,9 @@ part 'movieList.g.dart';
 class MovieList {
     MovieList();
 
-    List list;
+    num code;
+    Map<String,dynamic> data;
+    String message;
     
     factory MovieList.fromJson(Map<String,dynamic> json) => _$MovieListFromJson(json);
     Map<String, dynamic> toJson() => _$MovieListToJson(this);

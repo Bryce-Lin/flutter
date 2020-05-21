@@ -1,31 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:videos/models/index.dart';
+import 'package:videos/routes/player/play.dart';
+// import 'package:videos/models/index.dart';
 // import 'package:videos/models/Movi.dart';
 import 'package:videos/widgets/Rating.dart';
 class HeroPage extends StatelessWidget {
-  final int index;
-  
-  const HeroPage(this.index,{Key key}) : super(key: key);
+  final dynamic name;
+  final detail ;
+  const HeroPage(this.name,this.detail,{Key key}) : super(key: key);
   
   @override
   Widget build(BuildContext context) {
   
-    return  Container(
+    return  MaterialApp(
+      onGenerateRoute:(RouteSettings settings){
+      return MaterialPageRoute(builder: (context){
+            // String routeName = settings.name;
+            return VideoApp(playurl:settings.arguments);
+        // 如果访问的路由页需要登录，但当前未登录，则直接返回登录页路由，
+        // 引导用户登录；其它情况则正常打开路由。
+      }
+    );
+    },
+      home:Scaffold(
+      body:Container(
       child: Hero(
-        tag: "DemoTag$index",
-        child:  Stack(
-          overflow:Overflow.visible,
-          alignment: Alignment.center,
+        tag: name,
+        child: ListView(
           children: <Widget>[
              FadeInImage.assetNetwork(
                     height: 280,
                     width: 500,
                     fit: BoxFit.fill,
-                    placeholder: './images/a1.jpg',
-                    image: 'https://bkimg.cdn.bcebos.com/pic/023b5bb5c9ea15ce9e367ff3b0003af33b87b274?x-bce-process=image/watermark,g_7,image_d2F0ZXIvYmFpa2UyMjA=,xp_5,yp_5'
+                    placeholder: './images/image.png',
+                    image: detail['vod_pic']
           ),
+            Stack(
+          overflow:Overflow.visible,
+          alignment: Alignment.center,
+          children: <Widget>[
+           
+
             Positioned(
-              top: 260,
+              // top: 260,
               child: Container(
                 decoration: new BoxDecoration(
                 //背景
@@ -35,34 +51,34 @@ class HeroPage extends StatelessWidget {
                 ),
                 width: MediaQuery.of(context).size.width,
                 // height: 500, 
-                child: MovieContainer(),
+                child: MovieContainer(detail),
                 // child: wo,
               ),
             ),
             ],
           ),
+          ],
+        )
       ),
+    ) ,
+    )
     );
+       
   }
 }
 
 
 class MovieContainer extends StatelessWidget {
-  const MovieContainer({Key key}) : super(key: key);
-  final String movieContent = '''来自泰坦星的灭霸为了解决宇宙资源匮乏、人口暴增的问题，集齐了所有无限宝石，一个响指成功地使全宇宙生命随机减半。
-宇宙由于灭霸的行动而变得满目疮痍，但是五年之后，被困在量子领域的蚁人意外回到现实世界，他的出现为幸存的复仇者点燃了希望。无论前方将遭遇怎样的后果，幸存的复仇者都必须在剩余盟友的帮助下再一次集结，以逆转灭霸的所作所为，彻底恢复宇宙的秩序       
-                ''';
+  final detail ;
+  const MovieContainer(this.detail,{Key key}) : super(key: key);
 
-  final String performer = '''
-  范·迪塞尔 / 艾莎·冈萨雷斯 / 萨姆·修汉 / 托比·凯贝尔 / 妲露拉·莱莉 / 拉蒙尼·莫里斯 / 盖·皮尔斯 / 悉达尔斯·达南杰
-  ''';
   @override
   Widget build(BuildContext context) {
     return Padding(
         padding: EdgeInsets.only(top:25,bottom: 33,left: 15,right: 15),
         child: Column(
           children: <Widget>[
-            TopContainer(),
+            TopContainer(detail['vod_name']),
             Padding(
               padding: EdgeInsets.only(top: 15,bottom: 20),
               child: Divider(
@@ -70,10 +86,10 @@ class MovieContainer extends StatelessWidget {
               color:Color(0xffEFEFEF)
             ),
             ),
-            DesContainer(),
-            movieDesContainer('影片简介',movieContent),
-            movieDesContainer('演职人员',performer),
-            playerButton(),
+            DesContainer(detail),
+            movieDesContainer('影片简介',detail['vod_content']),
+            movieDesContainer('演职人员',detail['vod_actor']),
+            playerButton(detail['movieList']),
           ],
         )
     );
@@ -81,13 +97,33 @@ class MovieContainer extends StatelessWidget {
 }
 
 class playerButton extends StatefulWidget {
-  playerButton({Key key}) : super(key: key);
+  final List movieList;
+  playerButton(this.movieList,{Key key}) : super(key: key);
 
   @override
   _playerButtonState createState() => _playerButtonState();
 }
 
 class _playerButtonState extends State<playerButton> {
+
+  List<Widget> getPlayBtn () {
+      List<Widget> playList = [];
+      for(int i = 0;i<widget.movieList.length;i++) {
+        playList.add(MaterialButton(
+                color: Color(0xffEFEFEF),
+                minWidth: 100,
+                height: 37,
+                textColor: Color(0xff202020),
+                child: new Text(widget.movieList[i].split('\$')[0]),
+                onPressed: () {
+                     Navigator.of(context).pushNamed("/VideoApp",arguments: widget.movieList[i].split('\$')[1]);
+                },
+            ));
+        
+      }
+      return playList;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -100,18 +136,18 @@ class _playerButtonState extends State<playerButton> {
             Text('云播',style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
+              decoration: TextDecoration.none,
               color: Color(0xff202020)
+              
             ),),
-             MaterialButton(
-                color: Color(0xffEFEFEF),
-                minWidth: 100,
-                height: 37,
-                textColor: Color(0xff202020),
-                child: new Text('第一集'),
-                onPressed: () {
-                    // ...
-                },
-            )
+            Wrap(
+              alignment :WrapAlignment.spaceBetween,
+              // crossAxisAlignment :WrapCrossAlignment.center,   //交叉轴上子控件的对齐方式
+              spacing: 20, //主轴上子控件的间距
+              runSpacing: 15, //交叉轴上子控件之间的间距
+              children: getPlayBtn(), //要显示的子控件集合
+            ),
+             
          ],
        )
     );
@@ -127,11 +163,14 @@ class movieDesContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top:25),
+      width: MediaQuery.of(context).size.width,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Text(title,style: TextStyle(
             fontWeight: FontWeight.bold,
+            decoration: TextDecoration.none,
             fontSize: 16,
             color: Color(0xff202020)
           ),),
@@ -141,6 +180,7 @@ class movieDesContainer extends StatelessWidget {
                 content
             ,style: TextStyle(
               fontWeight: FontWeight.w500,
+              decoration: TextDecoration.none,
               fontSize: 14,
               color: Color(0xff808080)
             ),),
@@ -152,7 +192,8 @@ class movieDesContainer extends StatelessWidget {
 }
 
 class TopContainer extends StatelessWidget {
-  const TopContainer({Key key}) : super(key: key);
+  final String title;
+  const TopContainer(this.title,{Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +204,8 @@ class TopContainer extends StatelessWidget {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('复仇者联盟4：终局之战',style: TextStyle(
+                Text(title,style: TextStyle(
+                  decoration: TextDecoration.none,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Color(0xff202020)
@@ -175,6 +217,7 @@ class TopContainer extends StatelessWidget {
                     margin: EdgeInsets.only(left:10),
                     child:Text('5.3',style: TextStyle(
                     fontSize: 14,
+                    decoration: TextDecoration.none,
                     fontWeight: FontWeight.w500,
                     color: Color(0xff808080)
                   ),)
@@ -195,6 +238,7 @@ class TopContainer extends StatelessWidget {
                 Text('12.8W',
                 style: TextStyle(
                   fontSize: 12,
+                  decoration: TextDecoration.none,
                   fontWeight: FontWeight.w500,
                   color:Color(0xff808080)
                 ),
@@ -209,22 +253,25 @@ class TopContainer extends StatelessWidget {
 
 
 class DesContainer extends StatelessWidget {
-  const DesContainer({Key key}) : super(key: key);
+  final detail ;
+  const DesContainer(this.detail,{Key key}) : super(key: key);
 
   List<Widget> getDesWidget () {
-    List<Map<String,Object>> desList = [{'title':'上映时间'},{'title':'制片地图'},{'title':'影片时长'}];
+    List<Map<String,Object>> desList = [{'title':'上映时间','val':'vod_year'},{'title':'制片地图','val':'vod_area'},{'title':'影片时长','val':'vod_total'}];
     List<Widget> desWidgetList = [];
 
     for(int i =0;i<desList.length;i++) {
       desWidgetList.add(Column(
-           children: <Widget>[
-              Text('2019.4.24',style: TextStyle(
+           children: < Widget>[
+              Text(detail[desList[i]['val']].toString(),style: TextStyle(
+                decoration: TextDecoration.none,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Color(0xff202020)
               ),),
               Text(desList[i]['title'],style: TextStyle(
                 fontSize: 12,
+                decoration: TextDecoration.none,
                 fontWeight: FontWeight.w500,
                 color: Color(0xff808080)
               ),)

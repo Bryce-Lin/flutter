@@ -1,11 +1,13 @@
 /*
  * @Author: your name
  * @Date: 2020-05-09 10:19:07
- * @LastEditTime: 2020-05-09 17:50:31
+ * @LastEditTime: 2020-05-16 12:02:41
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \videos\lib\common\apiUtil.dart
  */
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'dart:async';
 
@@ -24,9 +26,9 @@ class DioUtils {
   static Dio dio;
 
   /// default options
-  static const String API_PREFIX = 'http://www.0880ys.com/';
-  static const int CONNECT_TIMEOUT = 10000;
-  static const int RECEIVE_TIMEOUT = 3000;
+  static const String API_PREFIX = 'http://www.0880ys.com:7001/';
+  static const int CONNECT_TIMEOUT = 20000;
+  static const int RECEIVE_TIMEOUT = 20000;
 
   /// http request methods
   static const String GET = 'get';
@@ -37,9 +39,11 @@ class DioUtils {
 
   ///Get请求测试
   static void getHttp() async {
+    
     try {
-      Response response = await Dio().get("http://www.google.cn");
+      Response response = await Dio().get("http://192.168.130.25:7001/api/v2/movieHome");
       print("response$response");
+      print("12321232");
     } catch (e) {
       print(e);
     }
@@ -93,7 +97,7 @@ class DioUtils {
       Function(String error) onError}) async {
     parameters = parameters ?? {};
     method = method ?? 'GET';
-
+     url= '$API_PREFIX$url';
     /// 请求处理
     parameters.forEach((key, value) {
       if (url.indexOf(key) != -1) {
@@ -107,25 +111,25 @@ class DioUtils {
 
     Dio dio = createInstance();
     //请求结果
-    var result;
+    var  result;
     try {
       Response response = await dio.request(url,
           data: parameters, options: new Options(method: method));
       result = response.data;
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (onSuccess != null) {
           onSuccess(result);
         }
       } else {
         throw Exception('statusCode:${response.statusCode}');
       }
-      print('响应数据：' + response.toString());
+      // print('响应数据：' + response.toString());
     } on DioError catch (e) {
       print('请求出错：' + e.toString());
       onError(e.toString());
     }
 
-    return result;
+    return jsonDecode(result);
   }
 
   /// 创建 dio 实例对象
